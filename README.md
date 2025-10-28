@@ -3,5 +3,4 @@
 Koodin status:
 
 
-https://github.com/mehutonkka/ohtuvarasto/actions/workflows/CI/badge.svg
-
+[![CI](https://github.com/mehutonkka/ohtuvarasto/actions/workflows/main.yml/badge.svg)](https://github.com/mehutonkka/ohtuvarasto/actions/workflows/main.yml)
