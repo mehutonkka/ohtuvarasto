@@ -4,13 +4,30 @@ from varasto import Varasto
 
 app = Flask(__name__)
 
-varastot = {}
-varasto_id_counter = [0]
+
+class VarastoStore:
+    def __init__(self):
+        self.varastot = {}
+        self.id_counter = 0
+
+    def get_next_id(self):
+        self.id_counter += 1
+        return self.id_counter
+
+    def clear(self):
+        self.varastot.clear()
+        self.id_counter = 0
 
 
-def get_next_id():
-    varasto_id_counter[0] += 1
-    return varasto_id_counter[0]
+store = VarastoStore()
+varastot = store.varastot
+
+
+def parse_float(value, default=0.0):
+    try:
+        return float(value) if value else default
+    except (ValueError, TypeError):
+        return default
 
 
 @app.route("/")
@@ -21,9 +38,9 @@ def index():
 @app.route("/varasto/new", methods=["GET", "POST"])
 def new_varasto():
     if request.method == "POST":
-        tilavuus = float(request.form.get("tilavuus", 0))
-        alku_saldo = float(request.form.get("alku_saldo", 0))
-        varasto_id = get_next_id()
+        tilavuus = parse_float(request.form.get("tilavuus"), 0)
+        alku_saldo = parse_float(request.form.get("alku_saldo"), 0)
+        varasto_id = store.get_next_id()
         varastot[varasto_id] = {
             "varasto": Varasto(tilavuus, alku_saldo),
             "nimi": request.form.get("nimi", f"Varasto {varasto_id}")
@@ -49,7 +66,7 @@ def edit_varasto(varasto_id):
         return redirect(url_for("index"))
     if request.method == "POST":
         nimi = request.form.get("nimi", varastot[varasto_id]["nimi"])
-        tilavuus = float(request.form.get("tilavuus", 0))
+        tilavuus = parse_float(request.form.get("tilavuus"), 0)
         varasto = varastot[varasto_id]["varasto"]
         saldo = varasto.saldo
         varastot[varasto_id]["nimi"] = nimi
@@ -66,7 +83,7 @@ def edit_varasto(varasto_id):
 def add_to_varasto(varasto_id):
     if varasto_id not in varastot:
         return redirect(url_for("index"))
-    maara = float(request.form.get("maara", 0))
+    maara = parse_float(request.form.get("maara"), 0)
     varastot[varasto_id]["varasto"].lisaa_varastoon(maara)
     return redirect(url_for("view_varasto", varasto_id=varasto_id))
 
@@ -75,7 +92,7 @@ def add_to_varasto(varasto_id):
 def remove_from_varasto(varasto_id):
     if varasto_id not in varastot:
         return redirect(url_for("index"))
-    maara = float(request.form.get("maara", 0))
+    maara = parse_float(request.form.get("maara"), 0)
     varastot[varasto_id]["varasto"].ota_varastosta(maara)
     return redirect(url_for("view_varasto", varasto_id=varasto_id))
 

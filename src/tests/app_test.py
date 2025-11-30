@@ -1,17 +1,15 @@
 import unittest
-from app import app, varastot, varasto_id_counter
+from app import app, varastot, store
 
 
 class TestWebApp(unittest.TestCase):
     def setUp(self):
         app.config["TESTING"] = True
         self.client = app.test_client()
-        varastot.clear()
-        varasto_id_counter[0] = 0
+        store.clear()
 
     def tearDown(self):
-        varastot.clear()
-        varasto_id_counter[0] = 0
+        store.clear()
 
     def test_index_empty(self):
         response = self.client.get("/")
@@ -155,3 +153,25 @@ class TestWebApp(unittest.TestCase):
         self.assertIn(b"Varasto 1", response.data)
         self.assertIn(b"Varasto 2", response.data)
         self.assertEqual(len(varastot), 2)
+
+    def test_create_varasto_with_invalid_input(self):
+        response = self.client.post("/varasto/new", data={
+            "nimi": "Testivarasto",
+            "tilavuus": "invalid",
+            "alku_saldo": "invalid"
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(varastot), 1)
+        self.assertEqual(varastot[1]["varasto"].tilavuus, 0.0)
+
+    def test_add_with_invalid_input(self):
+        self.client.post("/varasto/new", data={
+            "nimi": "Testivarasto",
+            "tilavuus": "100",
+            "alku_saldo": "10"
+        })
+        response = self.client.post("/varasto/1/add", data={
+            "maara": "invalid"
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertAlmostEqual(varastot[1]["varasto"].saldo, 10)
