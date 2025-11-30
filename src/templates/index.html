@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Varastot</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .varasto-list { list-style: none; padding: 0; }
+        .varasto-item { 
+            padding: 10px; 
+            margin: 5px 0; 
+            background: #f5f5f5; 
+            border-radius: 5px; 
+        }
+        .varasto-item a { 
+            text-decoration: none; 
+            color: #0066cc; 
+        }
+        .btn { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            background: #0066cc; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin: 10px 0;
+        }
+        .btn:hover { background: #0052a3; }
+    </style>
+</head>
+<body>
+    <h1>Varastot</h1>
+    
+    <a href="{{ url_for('new_varasto') }}" class="btn">Luo uusi varasto</a>
+    
+    {% if varastot %}
+    <ul class="varasto-list">
+        {% for id, data in varastot.items() %}
+        <li class="varasto-item">
+            <a href="{{ url_for('view_varasto', varasto_id=id) }}">
+                {{ data.nimi }} - {{ data.varasto }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Ei varastoja. Luo uusi varasto aloittaaksesi.</p>
+    {% endif %}
+</body>
+</html>
