@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from varasto import Varasto
 
 
 app = Flask(__name__)
+app.secret_key = 'varasto-secret-key'
 
 
 class VarastoStore:
@@ -79,12 +80,33 @@ def edit_varasto(varasto_id):
     )
 
 
+def flash_add_result(maara, tilaa, varasto):
+    if maara > tilaa:
+        varasto.lisaa_varastoon(maara)
+        msg = f"Vain {tilaa} lisättiin, koska tilaa ei riittänyt {maara}:lle."
+        flash(msg, "warning")
+    else:
+        varasto.lisaa_varastoon(maara)
+        flash(f"{maara} lisättiin varastoon.", "success")
+
+
+def flash_remove_result(maara, saldo, varasto):
+    if maara > saldo:
+        otettu = varasto.ota_varastosta(maara)
+        msg = f"Vain {otettu} otettiin, koska saldoa ei riittänyt {maara}:lle."
+        flash(msg, "warning")
+    else:
+        varasto.ota_varastosta(maara)
+        flash(f"{maara} otettiin varastosta.", "success")
+
+
 @app.route("/varasto/<int:varasto_id>/add", methods=["POST"])
 def add_to_varasto(varasto_id):
     if varasto_id not in varastot:
         return redirect(url_for("index"))
     maara = parse_float(request.form.get("maara"), 0)
-    varastot[varasto_id]["varasto"].lisaa_varastoon(maara)
+    varasto = varastot[varasto_id]["varasto"]
+    flash_add_result(maara, varasto.paljonko_mahtuu(), varasto)
     return redirect(url_for("view_varasto", varasto_id=varasto_id))
 
 
@@ -93,7 +115,8 @@ def remove_from_varasto(varasto_id):
     if varasto_id not in varastot:
         return redirect(url_for("index"))
     maara = parse_float(request.form.get("maara"), 0)
-    varastot[varasto_id]["varasto"].ota_varastosta(maara)
+    varasto = varastot[varasto_id]["varasto"]
+    flash_remove_result(maara, varasto.saldo, varasto)
     return redirect(url_for("view_varasto", varasto_id=varasto_id))
 
 

@@ -175,3 +175,53 @@ class TestWebApp(unittest.TestCase):
         }, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertAlmostEqual(varastot[1]["varasto"].saldo, 10)
+
+    def test_add_too_much_shows_warning(self):
+        self.client.post("/varasto/new", data={
+            "nimi": "Testivarasto",
+            "tilavuus": "100",
+            "alku_saldo": "80"
+        })
+        response = self.client.post("/varasto/1/add", data={
+            "maara": "50"
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Vain 20.0 lis".encode(), response.data)
+        self.assertAlmostEqual(varastot[1]["varasto"].saldo, 100)
+
+    def test_remove_too_much_shows_warning(self):
+        self.client.post("/varasto/new", data={
+            "nimi": "Testivarasto",
+            "tilavuus": "100",
+            "alku_saldo": "30"
+        })
+        response = self.client.post("/varasto/1/remove", data={
+            "maara": "50"
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Vain 30.0 otettiin".encode(), response.data)
+        self.assertAlmostEqual(varastot[1]["varasto"].saldo, 0)
+
+    def test_add_success_shows_message(self):
+        self.client.post("/varasto/new", data={
+            "nimi": "Testivarasto",
+            "tilavuus": "100",
+            "alku_saldo": "10"
+        })
+        response = self.client.post("/varasto/1/add", data={
+            "maara": "20"
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("varastoon".encode(), response.data)
+
+    def test_remove_success_shows_message(self):
+        self.client.post("/varasto/new", data={
+            "nimi": "Testivarasto",
+            "tilavuus": "100",
+            "alku_saldo": "50"
+        })
+        response = self.client.post("/varasto/1/remove", data={
+            "maara": "20"
+        }, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("otettiin varastosta".encode(), response.data)
